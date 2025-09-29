@@ -9,11 +9,6 @@ from domain.LogEntry import LogEntry
 class Collector:
     def __init__(self, log_sources="../data/log_sources.txt", db_path="../data/Sqlite3.db"):
         self.__log_sources = log_sources
-        """
-        data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
-        os.makedirs(data_dir, exist_ok=True)
-        self.__db_path = os.path.join(data_dir, db_path)
-        """
         self.__db_path = db_path
         self.__create_table_if_not_exists()
 
@@ -43,7 +38,6 @@ class Collector:
             file.write(file_path + "\n")
         logs =  self.__read_and_parse_jsonlog(file_path)
         self.__insert_logs_to_db(logs)
-
     def update_db(self):
         with open(self.__log_sources, 'r') as file:
             for log_path in file:
@@ -112,7 +106,7 @@ class Collector:
         cursor_obj = connection_obj.cursor()
 
         insert_query = """
-            INSERT INTO logs (raw_format, time_stamp, severity, description, hostname)
+            INSERT OR IGNORE INTO logs (raw_format, time_stamp, severity, description, hostname)
             VALUES (?, ?, ?, ?, ?)
         """
 
