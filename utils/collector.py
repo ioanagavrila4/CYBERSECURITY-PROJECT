@@ -14,7 +14,7 @@ class Collector:
         self.__db_path = db_path
         self.__create_table_if_not_exists()
 
-        self.update_db()
+        #self.update_db()
 
     def __create_table_if_not_exists(self):
         connection_obj = sqlite3.connect(self.__db_path)

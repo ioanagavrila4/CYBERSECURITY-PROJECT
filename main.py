@@ -1,3 +1,4 @@
+from ui.email_interface import create_email_interface
 from utils.collector import Collector
 from utils.alerts import AlertSender
 import time
@@ -6,23 +7,12 @@ LOG_SOURCES = "data/log_sources.txt"
 DB_PATH = "data/Sqlite3.db"
 
 def main():
+    #TODO execute cron_script on boot
     collector = Collector(LOG_SOURCES, DB_PATH)
-    print(collector.get_entry_count())
-    collector.display_entries_on_console()
+    #print(f'DEBUG: Added {collector.get_entry_count()} entries from db')
+    #collector.display_entries_on_console()
 
-    # Start email monitoring for new logs
-    alert_sender = AlertSender(db_path=DB_PATH)
-    print("\nStarting email monitoring for logs based on configured priority threshold...")
-    alert_sender.start_monitoring(interval=30)
-
-    try:
-        print("Monitoring active. Press Ctrl+C to stop.")
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print("\nStopping monitoring...")
-        alert_sender.stop_monitoring()
-        
+    create_email_interface()
 
 
 if __name__ == '__main__':

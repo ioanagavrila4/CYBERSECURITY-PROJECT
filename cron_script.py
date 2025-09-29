@@ -1,3 +1,4 @@
+from utils.alerts import AlertSender
 from utils.collector import Collector
 import subprocess
 import os
@@ -17,15 +18,13 @@ def main():
     print(f"Exported journalctl logs to {JOURNAL_LOG_FILE}")
 
     collector = Collector(LOG_SOURCES, DB_PATH)
+    collector.update_db()
     print(collector.get_entry_count())
 
-    """
-    # Step 3: Delete the file
-    if os.path.exists(JOURNAL_LOG_FILE):
-        os.remove(JOURNAL_LOG_FILE)
-        print(f"Deleted {JOURNAL_LOG_FILE}")
-    """
-
+    # Start email monitoring for new logs
+    alert_sender = AlertSender(db_path=DB_PATH)
+    print("\nStarting email monitoring for logs based on configured priority threshold...")
+    alert_sender.check_new_logs()
 
 if __name__ == '__main__':
     main()
