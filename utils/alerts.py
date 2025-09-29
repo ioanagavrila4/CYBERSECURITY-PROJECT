@@ -18,7 +18,7 @@ except ImportError:
         return {'alert_email': '', 'alert_priority': 0}
 
 class AlertSender:
-    def __init__(self, api_key: str = "re_Sfmiu7dp_EwgtNFH1LPy4GQgTqiQRktoD", db_path: str = "../data/Sqlite3.db"):
+    def __init__(self, api_key: str = "re_S5RXcYYE_Kkaz3zskzALB5Jh2Dbwjghc4", db_path: str = "../data/Sqlite3.db"):
         resend.api_key = api_key
         self.sender_email = "onboarding@resend.dev"
         self.db_path = db_path
