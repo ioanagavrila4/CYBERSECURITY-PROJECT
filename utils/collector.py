@@ -7,12 +7,22 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from domain.LogEntry import LogEntry
 
 class Collector:
-    def __init__(self):
-        self._log_entries = []
+    def __init__(self, log_sources="../data/log_sources.txt", db_path="Sqlite3.db"):
+        self.__log_sources = log_sources
+        data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
+        os.makedirs(data_dir, exist_ok=True)
+        self.__db_path = os.path.join(data_dir, db_path)
+        with open(log_sources, 'r') as file:
+            for line in file:
+                line = line.strip()
+                if not line:
+                    break
+                self.add_file(line)
 
     def add_file(self, file_path: str):
         # TODO - detect log format
-        self.__read_and_parse_jsonlog(file_path)
+        logs =  self.__read_and_parse_jsonlog(file_path)
+        self.__insert_logs_to_db(logs)
 
     def __read_and_parse_jsonlog(self,file_path:str ):
         """
@@ -24,6 +34,7 @@ class Collector:
         Returns:
             None
         """
+        logs = []
         try:
             with open(file_path, 'r') as file:
                 content = file.read().strip()
@@ -50,7 +61,7 @@ class Collector:
                         json.loads(block)
                         # Create LogEntry object
                         log_entry = LogEntry(block)
-                        self._log_entries.append(log_entry)
+                        logs.append(log_entry)
                     except json.JSONDecodeError as e:
                         print(f"Failed to parse JSON block {i}: {e}")
                         print(f"Block content: {block[:100]}...")
@@ -64,8 +75,10 @@ class Collector:
         except Exception as e:
             print(f"Error reading file: {e}")
 
-    def insert_logs_to_db(self, db_path):
-        connection_obj = sqlite3.connect(db_path)
+        return logs
+
+    def __insert_logs_to_db(self, logs):
+        connection_obj = sqlite3.connect(self.__db_path)
         cursor_obj = connection_obj.cursor()
 
         insert_query = """
@@ -73,7 +86,8 @@ class Collector:
             VALUES (?, ?, ?, ?, ?)
         """
 
-        for entry in self._log_entries:
+
+        for entry in logs:
             cursor_obj.execute(insert_query, (
                 entry.get_raw_format(),
                 entry.get_timestamp(),
@@ -85,12 +99,12 @@ class Collector:
         connection_obj.commit()
         connection_obj.close()
 
-    def display_entries(self, db_path: str) -> None:
+    def display_entries(self) -> None:
         try:
-            connection_obj = sqlite3.connect(db_path)
+            connection_obj = sqlite3.connect(self.__db_path)
             cursor_obj = connection_obj.cursor()
 
-            select_query = "SELECT raw_format, time_stamp, severity, description, hostname FROM logs"
+            select_query = "SELECT raw_format, time_stamp, severity, description, hostname FROM logs ORDER BY time_stamp"
             cursor_obj.execute(select_query)
 
             rows = cursor_obj.fetchall()
@@ -115,17 +129,16 @@ class Collector:
 
 def main():
     syslog_file = "../dummy-files/rpi_dummy_syslog.txt"
-    data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
-    os.makedirs(data_dir, exist_ok=True)
-    db_path = os.path.join(data_dir, "Sqlite3.db")
 
     collector = Collector()
     collector.add_file(syslog_file)
-    collector.display_entries(db_path)
+    collector.display_entries()
 
+    """
     print("\nInserting parsed logs into database...")
     collector.insert_logs_to_db(db_path)
     print("Insertion complete.")
+    """
 
 if __name__ == "__main__":
     main()
