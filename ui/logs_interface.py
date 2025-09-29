@@ -9,6 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.reports import Reports
 from utils.collector import Collector
+from utils.log_report_generator import LogReportGenerator
 
 
 class LogsInterface:
@@ -21,8 +22,10 @@ class LogsInterface:
         self.tree = None
         self.collector = Collector(log_sources, db_path)
         self.reports = Reports(self.collector)
+        self.report_generator = LogReportGenerator()
         self.all_logs = []
         self.filtered_logs = []
+        self.current_filter_info = []
 
         # Filter variables
         self.filter_severity = None
@@ -202,7 +205,8 @@ class LogsInterface:
         buttons_config = [
             ("Refresh Logs", self.refresh_logs, '#3498db'),
             ("Clear All Filters", self.clear_filter, '#f39c12'),
-            ("Show Available Filter Values", self.show_available_values, '#9b59b6')
+            ("Show Available Filter Values", self.show_available_values, '#9b59b6'),
+            ("Generate Report", self.generate_logs_report, '#27ae60')
         ]
 
         for text, command, color in buttons_config:
@@ -519,6 +523,7 @@ class LogsInterface:
     def apply_all_filters(self):
         """Apply all active filters and display results"""
         active_filters = []
+        self.current_filter_info = []
 
         try:
             # Get filter values
@@ -570,6 +575,9 @@ class LogsInterface:
 
             # Convert filtered log entries to display format
             final_filtered_logs = self._convert_log_entries_to_display(current_log_entries)
+
+            # Store current filter info for report generation
+            self.current_filter_info = active_filters
 
             # Display filtered results
             self.display_logs(final_filtered_logs)
@@ -642,8 +650,63 @@ class LogsInterface:
         self.filter_severity.set("")
         self.filter_syslog.set("")
         self.filter_datetime.set("")
+        self.current_filter_info = []
         self.display_logs(self.all_logs)
         messagebox.showinfo("Filters Cleared", "All filters have been cleared.")
+
+    def generate_logs_report(self):
+        """Generate a Markdown report of currently displayed logs with email option"""
+        try:
+            # Get currently displayed logs from the treeview
+            displayed_logs = []
+            for item_id in self.tree.get_children():
+                item = self.tree.item(item_id)
+                values = item['values']
+
+                # Find matching log from all_logs
+                for log in self.all_logs:
+                    colored_datetime = f"● {log['datetime']}"
+                    if colored_datetime == values[0] and log['message'] == values[1]:
+                        displayed_logs.append(log)
+                        break
+
+            if not displayed_logs:
+                messagebox.showwarning("No Logs", "No logs available to generate report.")
+                return
+
+            # Ask if user wants to send via email
+            send_email = messagebox.askyesno(
+                "Email Report",
+                f"Generate report for {len(displayed_logs)} log entries.\n\n"
+                "Do you want to send this report via email?\n"
+                "(Email must be configured in Email Interface)"
+            )
+
+            # Generate report with email option
+            filter_info = self.current_filter_info if self.current_filter_info else None
+            success, result = self.report_generator.generate_report(
+                displayed_logs,
+                filter_info,
+                send_email=send_email
+            )
+
+            if success:
+                email_status = "\n✉️ Email sent successfully!" if send_email else ""
+                if "Email sending failed" in result:
+                    email_status = "\n⚠️ Report saved but email sending failed.\nPlease check your email configuration."
+
+                messagebox.showinfo(
+                    "Report Generated",
+                    f"Report successfully generated!\n\n"
+                    f"Location: {result}\n"
+                    f"Log entries included: {len(displayed_logs)}"
+                    f"{email_status}"
+                )
+            else:
+                messagebox.showerror("Report Error", f"Failed to generate report:\n{result}")
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Error generating report:\n{e}")
 
     # ==================== DETAIL VIEW ====================
 
