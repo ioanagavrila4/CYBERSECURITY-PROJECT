@@ -155,6 +155,19 @@ def create_email_interface():
     def genereaza_rapoarte():
         messagebox.showinfo("Report", "Generating reports...")
 
+    def open_logs_viewer():
+        """Open the logs viewer interface"""
+        root.destroy()
+        try:
+            from ui.logs_interface import create_logs_interface
+        except ImportError:
+            # Fallback for direct script execution
+            import sys
+            import os
+            sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            from ui.logs_interface import create_logs_interface
+        create_logs_interface()
+
     root = tk.Tk()
     root.title("CyberPolice - Security Alert Configuration")
     root.geometry("900x700")
@@ -495,14 +508,18 @@ def create_email_interface():
     )
     reports_desc.pack(pady=(0, 15))
 
+    # Buttons frame for side-by-side layout
+    buttons_frame = tk.Frame(reports_content, bg='white')
+    buttons_frame.pack(pady=10)
+
     genereaza_btn = tk.Button(
-        reports_content,
+        buttons_frame,
         text="📈 Generate Security Reports",
         command=genereaza_rapoarte,
         bg='#27ae60',
         fg='white',
-        font=('Helvetica', 12, 'bold'),
-        width=25,
+        font=('Helvetica', 11, 'bold'),
+        width=22,
         height=2,
         bd=0,
         relief='flat',
@@ -510,17 +527,42 @@ def create_email_interface():
         activebackground='#229954',
         activeforeground='white'
     )
-    genereaza_btn.pack(pady=10, ipady=10)
+    genereaza_btn.pack(side='left', padx=10, ipady=8)
 
-    # Add hover effects for reports button
+    logs_viewer_btn = tk.Button(
+        buttons_frame,
+        text="📊 View Security Logs",
+        command=open_logs_viewer,
+        bg='#9b59b6',
+        fg='white',
+        font=('Helvetica', 11, 'bold'),
+        width=22,
+        height=2,
+        bd=0,
+        relief='flat',
+        cursor='hand2',
+        activebackground='#8e44ad',
+        activeforeground='white'
+    )
+    logs_viewer_btn.pack(side='left', padx=10, ipady=8)
+
+    # Add hover effects for reports buttons
     def on_enter_reports(event):
         genereaza_btn.configure(bg='#229954')
 
     def on_leave_reports(event):
         genereaza_btn.configure(bg='#27ae60')
 
+    def on_enter_logs(event):
+        logs_viewer_btn.configure(bg='#8e44ad')
+
+    def on_leave_logs(event):
+        logs_viewer_btn.configure(bg='#9b59b6')
+
     genereaza_btn.bind('<Enter>', on_enter_reports)
     genereaza_btn.bind('<Leave>', on_leave_reports)
+    logs_viewer_btn.bind('<Enter>', on_enter_logs)
+    logs_viewer_btn.bind('<Leave>', on_leave_logs)
 
     # Status bar at bottom
     status_frame = tk.Frame(main_frame, bg='#34495e', height=30)
