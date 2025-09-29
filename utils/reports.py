@@ -61,7 +61,7 @@ class Reports:
         :param type_report:
         :return:
         """
-        all_logs = self.get_message_logs()
+        all_logs = self.get_pretty_logs()
         filtered_logs = []
         for log_entry in all_logs:
             if type_report == "Severity" :
