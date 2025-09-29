@@ -10,7 +10,8 @@ class LogEntry:
         self._timestamp = None
         self._severity = None
         self._description = None
-        self._hostname = None
+        #self._hostname = None
+        self._syslog_identifier = None
         self._type = log_type
 
         if self._type==JSON:
@@ -24,8 +25,10 @@ class LogEntry:
         return int(self._severity)
     def get_description(self):
         return self._description
-    def get_hostname(self):
-        return self._hostname
+    #def get_hostname(self):
+        #return self._hostname
+    def get_syslog_identifier(self):
+        return self._syslog_identifier
     def get_type(self):
         return self._type
     def get_realtime(self):
@@ -38,7 +41,8 @@ class LogEntry:
             self._timestamp = log.get("__REALTIME_TIMESTAMP")
             self._severity = log.get("PRIORITY")
             self._description = log.get("MESSAGE")
-            self._hostname = log.get("_HOSTNAME")
+            #self._hostname = log.get("_HOSTNAME")
+            self._syslog_identifier = log.get("SYSLOG_IDENTIFIER")
         except:
             print("Failed to parse log entry")
 

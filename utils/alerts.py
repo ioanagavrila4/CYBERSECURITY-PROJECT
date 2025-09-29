@@ -74,7 +74,7 @@ class AlertSender:
 Log Alert Detected
 
 Severity: {severity_name} (Priority {log_entry.get_severity()})
-Hostname: {log_entry.get_hostname()}
+Syslog Identifier: {log_entry.get_syslog_identifier()}
 Timestamp: {log_entry.get_realtime()}
 Message: {log_entry.get_description()}
 
@@ -126,13 +126,13 @@ This is an automated alert from your cybersecurity monitoring system.
             cursor_obj = connection_obj.cursor()
 
             # Get all unprocessed logs - we'll filter by priority in code
-            query = "SELECT id,raw_format, time_stamp, severity, description, hostname, updated FROM logs WHERE updated = 0"
+            query = "SELECT id,raw_format, time_stamp, severity, description, syslog_identifier, updated FROM logs WHERE updated = 0"
             cursor_obj.execute(query)
 
             new_logs = cursor_obj.fetchall()
 
             for log_row in new_logs:
-                log_id, raw_format, timestamp, severity, description, hostname, updated = log_row
+                log_id, raw_format, timestamp, severity, description, syslog_identifier, updated = log_row
 
                 log_entry = LogEntry(raw_format)
 

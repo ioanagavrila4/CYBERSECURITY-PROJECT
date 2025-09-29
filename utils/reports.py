@@ -43,7 +43,7 @@ class Reports:
             pretty_log = (
                 f"Log with Message: {log_entry.get_description() or 'N/A'}\n"
                 f"Severity/Priority: {log_entry.get_severity() or 'N/A'}\n"
-                f"Hostname: {log_entry.get_hostname() or 'N/A'}\n"
+                f"Syslog Identifier: {log_entry.get_syslog_identifier() or 'N/A'}\n"
                 f"Realtime timestamp: {log_entry.get_realtime()}"
             )
             pretty_logs.append(pretty_log)
@@ -61,14 +61,18 @@ class Reports:
         :param type_report:
         :return:
         """
-        all_logs = self.get_pretty_logs()
+        all_logs = self.get_log_entries()
         filtered_logs = []
         for log_entry in all_logs:
             if type_report == "Severity" :
                 if log_entry.get_severity() == filter_by_this:
                     filtered_logs.append(log_entry)
             elif type_report == "Time" :
-                if log_entry.get_time() < filter_by_this:
+                #aici s-ar putea in loc de get_realtime() sa fie get_timestamp
+                if log_entry.get_realtime() < filter_by_this:
+                    filtered_logs.append(log_entry)
+            elif type_report == "Syslog" :
+                if log_entry.get_syslog_identifier() == filter_by_this:
                     filtered_logs.append(log_entry)
         return filtered_logs
 

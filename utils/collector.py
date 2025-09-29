@@ -19,6 +19,7 @@ class Collector:
     def __create_table_if_not_exists(self):
         connection_obj = sqlite3.connect(self.__db_path)
         cursor_obj = connection_obj.cursor()
+
         create_table_query = """
         CREATE TABLE IF NOT EXISTS logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26,7 +27,7 @@ class Collector:
             time_stamp TEXT NOT NULL,
             severity TEXT NOT NULL,
             description TEXT,
-            hostname TEXT,
+            syslog_identifier TEXT,
             updated INTEGER NOT NULL DEFAULT 0
         )
         """
@@ -111,7 +112,7 @@ class Collector:
         existing_timestamps = set(row[0] for row in cursor_obj.fetchall())
 
         insert_query = """
-            INSERT INTO logs (raw_format, time_stamp, severity, description, hostname)
+            INSERT INTO logs (raw_format, time_stamp, severity, description, syslog_identifier)
             VALUES (?, ?, ?, ?, ?)
         """
 
@@ -128,7 +129,8 @@ class Collector:
                 timestamp,
                 entry.get_severity(),
                 entry.get_description(),
-                entry.get_hostname()
+                #entry.get_hostname()
+                entry.get_syslog_identifier()
             ))
 
             new_entries_added += 1
@@ -157,7 +159,7 @@ class Collector:
             connection_obj = sqlite3.connect(self.__db_path)
             cursor_obj = connection_obj.cursor()
 
-            select_query = "SELECT raw_format, time_stamp, severity, description, hostname FROM logs ORDER BY time_stamp"
+            select_query = "SELECT raw_format, time_stamp, severity, description, syslog_identifier FROM logs ORDER BY time_stamp"
             cursor_obj.execute(select_query)
 
             rows = cursor_obj.fetchall()
@@ -171,7 +173,7 @@ class Collector:
                 print(f"  Timestamp: {row[1]}")
                 print(f"  Severity: {row[2]}")
                 print(f"  Description: {row[3]}")
-                print(f"  Hostname: {row[4]}")
+                print(f"  Syslog Identifier: {row[4]}")
                 print()
 
             connection_obj.close()
