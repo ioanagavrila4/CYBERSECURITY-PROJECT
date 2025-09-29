@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import sqlite3
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from domain.LogEntry import LogEntry
@@ -21,9 +22,8 @@ class Collector:
             file_path (str): Path to the syslog file
 
         Returns:
-            list: List of LogEntry objects
+            None
         """
-
         try:
             with open(file_path, 'r') as file:
                 content = file.read().strip()
@@ -64,17 +64,46 @@ class Collector:
         except Exception as e:
             print(f"Error reading file: {e}")
 
+    def insert_logs_to_db(self, db_path):
+        connection_obj = sqlite3.connect(db_path)
+        cursor_obj = connection_obj.cursor()
+
+        insert_query = """
+            INSERT INTO logs (raw_format, time_stamp, severity, description, hostname)
+            VALUES (?, ?, ?, ?, ?)
+        """
+
+        for entry in self._log_entries:
+            cursor_obj.execute(insert_query, (
+                entry.get_raw_format(),
+                entry.get_timestamp(),
+                entry.get_severity(),
+                entry.get_description(),
+                entry.get_hostname()
+            ))
+
+        connection_obj.commit()
+        connection_obj.close()
+
     def display_entries(self) -> None:
         for i, entry in enumerate(self._log_entries[:5]):
             print(f"\nEntry {i + 1}:")
             print(entry.get_raw_format())
 
+
 def main():
     syslog_file = "../dummy-files/rpi_dummy_syslog.txt"
+    data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
+    os.makedirs(data_dir, exist_ok=True)
+    db_path = os.path.join(data_dir, "Sqlite3.db")
+
     collector = Collector()
     collector.add_file(syslog_file)
     collector.display_entries()
 
+    print("\nInserting parsed logs into database...")
+    collector.insert_logs_to_db(db_path)
+    print("Insertion complete.")
 
 if __name__ == "__main__":
     main()
