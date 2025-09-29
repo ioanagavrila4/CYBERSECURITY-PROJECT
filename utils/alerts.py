@@ -15,10 +15,10 @@ try:
 except ImportError:
     # Fallback if email_interface is not available
     def get_email_config():
-        return {'alert_email': '', 'alert_priority': 0}
+        return {'alert_email': '', 'alert_priority': 6}
 
 class AlertSender:
-    def __init__(self, api_key: str = "re_S5RXcYYE_Kkaz3zskzALB5Jh2Dbwjghc4", db_path: str = "../data/Sqlite3.db"):
+    def __init__(self, api_key: str = "re_S5RXcYYE_Kkaz3zskzALB5Jh2Dbwjghc4", db_path: str = "data/Sqlite3.db"):
         resend.api_key = api_key
         self.sender_email = "onboarding@resend.dev"
         self.db_path = db_path
@@ -32,7 +32,7 @@ class AlertSender:
         """Load email configuration from the interface"""
         config = get_email_config()
         self.recipient_email = config.get('alert_email', 'ioanavalerya@gmail.com')  # fallback to original
-        self.alert_priority_threshold = config.get('alert_priority', 0)  # configurable threshold
+        self.alert_priority_threshold = config.get('alert_priority', 4)  # configurable threshold
 
     def send_security_alert(self, log_entry, sender_email: str = None, sender_password: str = None) -> bool:
         """
@@ -136,12 +136,10 @@ This is an automated alert from your cybersecurity monitoring system.
                 log_entry = LogEntry(raw_format)
 
                 if self.is_alert_priority(severity):
-                    if self.send_security_alert(log_entry):
-                        update_query = "UPDATE logs SET updated = 1 WHERE id = ?"
-                        cursor_obj.execute(update_query, (log_id,))
-
-
-            connection_obj.commit()
+                    self.send_security_alert(log_entry)
+                    update_query = "UPDATE logs SET updated = 1 WHERE id = ?"
+                    cursor_obj.execute(update_query, (log_id,))
+                    connection_obj.commit()
             connection_obj.close()
 
         except sqlite3.Error as e:

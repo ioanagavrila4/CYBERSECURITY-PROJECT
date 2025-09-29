@@ -41,6 +41,7 @@ class Collector:
             file.write(file_path + "\n")
         logs =  self.__read_and_parse_jsonlog(file_path)
         self.__insert_logs_to_db(logs)
+
     def update_db(self):
         with open(self.__log_sources, 'r') as file:
             for log_path in file:
