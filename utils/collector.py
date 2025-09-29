@@ -136,23 +136,21 @@ class Collector:
             new_entries_added += 1
             existing_timestamps.add(timestamp)
 
-            # Alert checking will be handled by AlertSender monitoring
-            # Remove immediate alert triggering to avoid duplicates
-
         connection_obj.commit()
         connection_obj.close()
 
         if new_entries_added > 0:
             print(f"Added {new_entries_added} new log entries to database")
 
+    """
     def _trigger_alert(self, log_entry):
-        """Trigger email alert for severity 5-6 logs"""
         try:
             from .alerts import AlertSender
             alert_sender = AlertSender(db_path=self.__db_path)
             alert_sender.send_security_alert(log_entry)
         except Exception as e:
             print(f"Failed to send alert for log entry: {e}")
+    """
 
     def display_entries_on_console(self) -> None:
         try:

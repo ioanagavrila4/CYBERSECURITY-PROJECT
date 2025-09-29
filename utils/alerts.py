@@ -34,8 +34,6 @@ class AlertSender:
         self.recipient_email = config.get('alert_email', 'ioanavalerya@gmail.com')  # fallback to original
         self.alert_priority_threshold = config.get('alert_priority', 0)  # configurable threshold
 
-
-
     def send_security_alert(self, log_entry, sender_email: str = None, sender_password: str = None) -> bool:
         """
         Send security alert email for critical log entries
@@ -68,7 +66,7 @@ class AlertSender:
 
             severity_name = severity_names.get(str(log_entry.get_severity()), "UNKNOWN")
 
-            subject = f"📊 Log Alert: {severity_name} - {log_entry.get_hostname()}"
+            subject = f"📊 Log Alert: {severity_name} - {log_entry.get_syslog_identifier()}"
 
             body = f"""
 Log Alert Detected
@@ -130,6 +128,7 @@ This is an automated alert from your cybersecurity monitoring system.
             cursor_obj.execute(query)
 
             new_logs = cursor_obj.fetchall()
+            print(f'DEBUG: number of new log entries {len(new_logs)}')
 
             for log_row in new_logs:
                 log_id, raw_format, timestamp, severity, description, syslog_identifier, updated = log_row
@@ -179,22 +178,3 @@ This is an automated alert from your cybersecurity monitoring system.
             print("Stopped log monitoring")
         else:
             print("Monitoring is not running")
-
-    def is_critical_priority(self, priority: Optional[str]) -> bool:
-        """
-        Check if log priority requires alerting (0-3) - kept for backward compatibility
-
-        Args:
-            priority: Priority string from log entry
-
-        Returns:
-            bool: True if priority is 0-3, False otherwise
-        """
-        if priority is None:
-            return False
-
-        try:
-            priority_int = int(priority)
-            return 0 <= priority_int <= 3
-        except (ValueError, TypeError):
-            return False

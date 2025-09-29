@@ -1,1 +1,1 @@
-dummy-files/rpi_dummy_syslog.txt
+dummy-files/onelog.txt
