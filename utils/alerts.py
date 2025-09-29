@@ -135,11 +135,13 @@ This is an automated alert from your cybersecurity monitoring system.
 
                 log_entry = LogEntry(raw_format)
 
+                update_query = "UPDATE logs SET updated = 1 WHERE id = ?"
+                cursor_obj.execute(update_query, (log_id,))
+                connection_obj.commit()
+
                 if self.is_alert_priority(severity):
                     self.send_security_alert(log_entry)
-                    update_query = "UPDATE logs SET updated = 1 WHERE id = ?"
-                    cursor_obj.execute(update_query, (log_id,))
-                    connection_obj.commit()
+
             connection_obj.close()
 
         except sqlite3.Error as e:
