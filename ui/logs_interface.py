@@ -15,12 +15,14 @@ from utils.log_report_generator import LogReportGenerator
 class LogsInterface:
     """Main interface for viewing and filtering security logs"""
 
-    def __init__(self, db_path="../data/Sqlite3.db", log_sources="../data/log_sources.txt"):
-        self.db_path = db_path
-        self.log_sources = log_sources
+    def __init__(self, db_path=None, log_sources=None):
+        # Use absolute paths relative to project root
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.db_path = db_path if db_path else os.path.join(project_root, "data", "Sqlite3.db")
+        self.log_sources = log_sources if log_sources else os.path.join(project_root, "data", "log_sources.txt")
         self.root = None
         self.tree = None
-        self.collector = Collector(log_sources, db_path)
+        self.collector = Collector(self.log_sources, self.db_path)
         self.reports = Reports(self.collector)
         self.report_generator = LogReportGenerator()
         self.all_logs = []

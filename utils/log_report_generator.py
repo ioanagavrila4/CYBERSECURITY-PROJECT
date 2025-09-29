@@ -7,8 +7,7 @@ import os
 import resend
 from datetime import datetime
 from collections import Counter
-from spire.doc import *
-from spire.doc.common import *
+
 import markdown
 
 # Import email configuration function
@@ -217,35 +216,115 @@ class LogReportGenerator:
         try:
             # Read the markdown file content
             with open(report_filepath, 'r', encoding='utf-8') as f:
-                report_content = f.read()
+                md_content = f.read()
 
-            # Prepare email
-            subject = "📊 Your Log Report Generated"
+            # Convert markdown to HTML
+            html_body = markdown.markdown(md_content, extensions=['tables', 'fenced_code'])
 
-            body = f"""Your log report has been generated successfully.
+            # Create full HTML email with styling
+            html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Logs Report</title>
+    <style>
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }}
+        h1 {{
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }}
+        h2 {{
+            color: #34495e;
+            margin-top: 30px;
+        }}
+        h3 {{
+            color: #7f8c8d;
+        }}
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }}
+        th {{
+            background-color: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }}
+        td {{
+            padding: 10px 12px;
+            border-bottom: 1px solid #ddd;
+        }}
+        tr:hover {{
+            background-color: #f5f5f5;
+        }}
+        ul {{
+            list-style-type: none;
+            padding-left: 0;
+        }}
+        ul li {{
+            padding: 5px 0;
+            padding-left: 20px;
+            position: relative;
+        }}
+        ul li:before {{
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #3498db;
+        }}
+        hr {{
+            border: none;
+            border-top: 2px solid #ecf0f1;
+            margin: 30px 0;
+        }}
+        strong {{
+            color: #2c3e50;
+        }}
+    </style>
+</head>
+<body>
+{html_body}
+</body>
+</html>"""
+
+            # Plain text version as fallback
+            text_body = f"""Your log report has been generated successfully.
 
 Report Details:
 - Total Log Entries: {log_count}
 - Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-- File: {os.path.basename(report_filepath)}
-
-The complete report is attached below.
 
 ---
 
-{report_content}
+{md_content}
 
 ---
 
 This is an automated report from your cybersecurity monitoring system.
 """
 
+            # Prepare email
+            subject = "📊 Your Log Report Generated"
+
             params = {
                 "from": self.sender_email,
                 "to": [self.recipient_email],
                 "subject": subject,
-                "text": body,
-                "html": None
+                "text": text_body,
+                "html": html_content
             }
 
             email = resend.Emails.send(params)

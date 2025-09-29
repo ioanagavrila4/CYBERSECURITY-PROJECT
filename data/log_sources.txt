@@ -1,3 +1,2 @@
 dummy-files/json_regular_dummy.txt
 dummy-files/onelog.txt
-journalctl.json
