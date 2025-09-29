@@ -152,7 +152,7 @@ class Collector:
         except Exception as e:
             print(f"Failed to send alert for log entry: {e}")
 
-    def display_entries(self) -> None:
+    def display_entries_on_console(self) -> None:
         try:
             connection_obj = sqlite3.connect(self.__db_path)
             cursor_obj = connection_obj.cursor()
@@ -167,7 +167,7 @@ class Collector:
 
             for i, row in enumerate(rows, 1):
                 print(f"Entry {i}:")
-                print(f"  Raw Format: {row[0]}")
+                #print(f"  Raw Format: {row[0]}")
                 print(f"  Timestamp: {row[1]}")
                 print(f"  Severity: {row[2]}")
                 print(f"  Description: {row[3]}")
