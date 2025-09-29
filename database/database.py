@@ -30,5 +30,10 @@ insert_query = """
 """
 connection_obj.commit()
 
+order_query = """ 
+    SELECT * FROM logs ORDER BY time_stamp;
+"""
+connection_obj.execute(order_query)
+
 
 connection_obj.close()
