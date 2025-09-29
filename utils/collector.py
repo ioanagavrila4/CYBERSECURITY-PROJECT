@@ -15,8 +15,27 @@ class Collector:
         self.__db_path = os.path.join(data_dir, db_path)
         """
         self.__db_path = db_path
+        self.__create_table_if_not_exists()
 
         self.update_db()
+
+    def __create_table_if_not_exists(self):
+        connection_obj = sqlite3.connect(self.__db_path)
+        cursor_obj = connection_obj.cursor()
+
+        create_table_query = """
+        CREATE TABLE IF NOT EXISTS logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            raw_format TEXT NOT NULL UNIQUE,
+            time_stamp TEXT NOT NULL,
+            severity TEXT NOT NULL,
+            description TEXT,
+            hostname TEXT
+        )
+        """
+        cursor_obj.execute(create_table_query)
+        connection_obj.commit()
+        connection_obj.close()
 
     def add_file(self, file_path: str):
         # TODO - detect log format
@@ -136,17 +155,3 @@ class Collector:
 
         except sqlite3.Error as e:
             print(f"Database error: {e}")
-
-
-def main():
-    collector = Collector()
-    collector.display_entries()
-
-    """
-    print("\nInserting parsed logs into database...")
-    collector.insert_logs_to_db(db_path)
-    print("Insertion complete.")
-    """
-
-if __name__ == "__main__":
-    main()
