@@ -7,6 +7,9 @@ import os
 import resend
 from datetime import datetime
 from collections import Counter
+from spire.doc import *
+from spire.doc.common import *
+import markdown
 
 # Import email configuration function
 try:
@@ -176,6 +179,22 @@ class LogReportGenerator:
         except Exception as e:
             return False, str(e)
 
+    def from_md_to_html(self, logs, filter_info=None):
+        success, filepath_to_md = self.generate_report(logs, filter_info, send_email=False)
+
+        with open(filepath_to_md, 'r', encoding='utf-8') as f:
+            md_content = f.read()
+
+            # Convert Markdown to HTML
+        html_content = markdown.markdown(md_content)
+
+        # Save HTML to corresponding file
+        html_filepath = os.path.splitext(filepath_to_md)[0] + '.html'
+        with open(html_filepath, 'w', encoding='utf-8') as f:
+            f.write(html_content)
+
+        return html_filepath
+
     def send_report_email(self, report_filepath, log_count):
         """
         Send the generated report via email using Resend
@@ -226,6 +245,7 @@ This is an automated report from your cybersecurity monitoring system.
                 "to": [self.recipient_email],
                 "subject": subject,
                 "text": body,
+                "html": None
             }
 
             email = resend.Emails.send(params)
@@ -235,3 +255,4 @@ This is an automated report from your cybersecurity monitoring system.
         except Exception as e:
             print(f"Failed to send report email: {e}")
             return False
+
