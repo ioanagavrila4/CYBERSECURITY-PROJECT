@@ -12,7 +12,6 @@ class Collector:
     def __init__(self, log_sources="../data/log_sources.txt", db_path="../data/Sqlite3.db"):
         self.__log_sources = log_sources
         self.__db_path = db_path
-        self.__alert_trap = 3
         self.__create_table_if_not_exists()
 
         self.update_db()
@@ -135,9 +134,8 @@ class Collector:
             new_entries_added += 1
             existing_timestamps.add(timestamp)
 
-            # Check if this log needs an alert (severity 5-6)
-            if entry.get_severity() <= self.__alert_trap:
-                self._trigger_alert(entry)
+            # Alert checking will be handled by AlertSender monitoring
+            # Remove immediate alert triggering to avoid duplicates
 
         connection_obj.commit()
         connection_obj.close()

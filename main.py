@@ -1,4 +1,3 @@
-from domain.LogEntry import LogEntry
 from utils.collector import Collector
 from utils.alerts import AlertSender
 import time
@@ -13,7 +12,7 @@ def main():
 
     # Start email monitoring for new logs
     alert_sender = AlertSender(db_path=DB_PATH)
-    print("\nStarting email monitoring for severity 5-6 logs...")
+    print("\nStarting email monitoring for logs based on configured priority threshold...")
     alert_sender.start_monitoring(interval=30)
 
     try:

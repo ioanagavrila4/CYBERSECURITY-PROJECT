@@ -9,14 +9,30 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from domain.LogEntry import LogEntry
 
+# Import email configuration function
+try:
+    from ui.email_interface import get_email_config
+except ImportError:
+    # Fallback if email_interface is not available
+    def get_email_config():
+        return {'alert_email': '', 'alert_priority': 0}
+
 class AlertSender:
     def __init__(self, api_key: str = "re_Sfmiu7dp_EwgtNFH1LPy4GQgTqiQRktoD", db_path: str = "../data/Sqlite3.db"):
         resend.api_key = api_key
-        self.recipient_email = "ioanavalerya@gmail.com"
         self.sender_email = "onboarding@resend.dev"
         self.db_path = db_path
         self.monitoring = False
         self.monitor_thread = None
+
+        # Load email configuration
+        self._load_email_config()
+
+    def _load_email_config(self):
+        """Load email configuration from the interface"""
+        config = get_email_config()
+        self.recipient_email = config.get('alert_email', 'ioanavalerya@gmail.com')  # fallback to original
+        self.alert_priority_threshold = config.get('alert_priority', 0)  # configurable threshold
 
 
 
@@ -25,15 +41,27 @@ class AlertSender:
         Send security alert email for critical log entries
 
         Args:
-            log_entry: LogEntry object with severity 5-6
+            log_entry: LogEntry object that meets priority threshold
             sender_email: Not used with Resend (kept for compatibility)
             sender_password: Not used with Resend (kept for compatibility)
 
         Returns:
             bool: True if email sent successfully, False otherwise
         """
+        # Reload config in case it changed
+        self._load_email_config()
+
+        # Skip sending if no recipient email configured
+        if not self.recipient_email:
+            print("No recipient email configured, skipping alert")
+            return False
         try:
             severity_names = {
+                "0": "EMERGENCY",
+                "1": "ALERT",
+                "2": "CRITICAL",
+                "3": "ERROR",
+                "4": "WARNING",
                 "5": "NOTICE",
                 "6": "INFORMATIONAL"
             }
@@ -53,7 +81,7 @@ Message: {log_entry.get_description()}
 Raw Log Entry:
 {log_entry.get_raw_format()[:500]}...
 
-This is an automated alert from your cybersecurity monitoring system for priority 5-6 events.
+This is an automated alert from your cybersecurity monitoring system.
 """
 
             params = {
@@ -73,30 +101,32 @@ This is an automated alert from your cybersecurity monitoring system for priorit
 
     def is_alert_priority(self, priority: Optional[str]) -> bool:
         """
-        Check if log priority requires alerting (5-6)
+        Check if log priority requires alerting based on configured threshold
 
         Args:
             priority: Priority string from log entry
 
         Returns:
-            bool: True if priority is 5-6, False otherwise
+            bool: True if priority meets or exceeds threshold, False otherwise
         """
         if priority is None:
             return False
 
         try:
             priority_int = int(priority)
-            return priority_int in [5, 6]
+            # Alert if priority is <= configured threshold (0=Emergency...6=Info)
+            return priority_int <= self.alert_priority_threshold
         except (ValueError, TypeError):
             return False
 
     def check_new_logs(self):
-        """Check for new log entries and send alerts for severity 5-6"""
+        """Check for new log entries and send alerts based on configured priority threshold"""
         try:
             connection_obj = sqlite3.connect(self.db_path)
             cursor_obj = connection_obj.cursor()
 
-            query = "SELECT id,raw_format, time_stamp, severity, description, hostname, updated FROM logs WHERE updated = 0 AND severity IN ('5', '6')"
+            # Get all unprocessed logs - we'll filter by priority in code
+            query = "SELECT id,raw_format, time_stamp, severity, description, hostname, updated FROM logs WHERE updated = 0"
             cursor_obj.execute(query)
 
             new_logs = cursor_obj.fetchall()
