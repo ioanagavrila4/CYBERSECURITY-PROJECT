@@ -14,10 +14,19 @@ table_creation_query = """
     time_stamp VARCHAR(255) NOT NULL,
     severity VARCHAR(255) NOT NULL,
     description VARCHAR(255) NOT NULL,
-    hostname VARCHAR(255) NOT NULL,
+    hostname VARCHAR(255) NOT NULL
     );
 """
 
 cursor_obj.execute(table_creation_query)
+
+insert_query = """
+    INSERT INTO logs (raw_format, time_stamp, severity, description, hostname)
+    VALUES (?, ?, ?, ?, ?)
+"""
+
+cursor_obj.execute(insert_query)
+connection_obj.commit()
+
 
 connection_obj.close()
