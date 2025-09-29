@@ -1,8 +1,12 @@
 import sqlite3
-
+import os
 file = "Sqlite3.db"
+data_dir = os.path.join(os.path.dirname(__file__), "..",  "data")
+os.makedirs(data_dir, exist_ok=True)
+db_path = os.path.join(data_dir, "Sqlite3.db")
 
-connection_obj = sqlite3.connect(file)
+
+connection_obj = sqlite3.connect(db_path)
 
 cursor_obj = connection_obj.cursor()
 
@@ -24,8 +28,6 @@ insert_query = """
     INSERT INTO logs (raw_format, time_stamp, severity, description, hostname)
     VALUES (?, ?, ?, ?, ?)
 """
-
-cursor_obj.execute(insert_query)
 connection_obj.commit()
 
 
