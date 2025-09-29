@@ -17,7 +17,6 @@ class Collector:
     def __create_table_if_not_exists(self):
         connection_obj = sqlite3.connect(self.__db_path)
         cursor_obj = connection_obj.cursor()
-
         create_table_query = """
         CREATE TABLE IF NOT EXISTS logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25,12 +24,14 @@ class Collector:
             time_stamp TEXT NOT NULL,
             severity TEXT NOT NULL,
             description TEXT,
-            hostname TEXT
+            hostname TEXT,
+            updated INTEGER NOT NULL DEFAULT 0
         )
         """
         cursor_obj.execute(create_table_query)
         connection_obj.commit()
         connection_obj.close()
+
 
     def add_file(self, file_path: str):
         # TODO - detect log format
