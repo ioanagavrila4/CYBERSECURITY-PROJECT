@@ -35,7 +35,6 @@ class Collector:
         connection_obj.commit()
         connection_obj.close()
 
-
     def add_file(self, file_path: str):
         # TODO - detect log format
         with open(self.__log_sources, 'a') as file:
@@ -181,3 +180,9 @@ class Collector:
 
         except sqlite3.Error as e:
             print(f"Database error: {e}")
+
+    def get_entry_count(self):
+        connection_obj = sqlite3.connect(self.__db_path)
+        count = connection_obj.execute("SELECT COUNT(*) FROM logs").fetchone()[0]
+        connection_obj.close()
+        return count
