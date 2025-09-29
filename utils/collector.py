@@ -85,10 +85,32 @@ class Collector:
         connection_obj.commit()
         connection_obj.close()
 
-    def display_entries(self) -> None:
-        for i, entry in enumerate(self._log_entries[:5]):
-            print(f"\nEntry {i + 1}:")
-            print(entry.get_raw_format())
+    def display_entries(self, db_path: str) -> None:
+        try:
+            connection_obj = sqlite3.connect(db_path)
+            cursor_obj = connection_obj.cursor()
+
+            select_query = "SELECT raw_format, time_stamp, severity, description, hostname FROM logs"
+            cursor_obj.execute(select_query)
+
+            rows = cursor_obj.fetchall()
+            if not rows:
+                print("No log entries found in the database.")
+                return
+
+            for i, row in enumerate(rows, 1):
+                print(f"Entry {i}:")
+                print(f"  Raw Format: {row[0]}")
+                print(f"  Timestamp: {row[1]}")
+                print(f"  Severity: {row[2]}")
+                print(f"  Description: {row[3]}")
+                print(f"  Hostname: {row[4]}")
+                print()
+
+            connection_obj.close()
+
+        except sqlite3.Error as e:
+            print(f"Database error: {e}")
 
 
 def main():
@@ -99,7 +121,7 @@ def main():
 
     collector = Collector()
     collector.add_file(syslog_file)
-    collector.display_entries()
+    collector.display_entries(db_path)
 
     print("\nInserting parsed logs into database...")
     collector.insert_logs_to_db(db_path)
