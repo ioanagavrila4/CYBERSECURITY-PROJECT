@@ -105,29 +105,40 @@ class Collector:
         return logs
 
     def __insert_logs_to_db(self, logs):
-        # TODO ensure no duplicates are added
         connection_obj = sqlite3.connect(self.__db_path)
         cursor_obj = connection_obj.cursor()
 
+        # Prepare a set of existing timestamps for quick lookup
+        cursor_obj.execute("SELECT time_stamp FROM logs")
+        existing_timestamps = set(row[0] for row in cursor_obj.fetchall())
+
         insert_query = """
-            INSERT OR IGNORE INTO logs (raw_format, time_stamp, severity, description, hostname)
+            INSERT INTO logs (raw_format, time_stamp, severity, description, hostname)
             VALUES (?, ?, ?, ?, ?)
         """
 
         new_entries_added = 0
         for entry in logs:
+            timestamp = entry.get_timestamp()
+
+            # Skip duplicate timestamps
+            if timestamp in existing_timestamps:
+                continue
+
             cursor_obj.execute(insert_query, (
                 entry.get_raw_format(),
-                entry.get_timestamp(),
+                timestamp,
                 entry.get_severity(),
                 entry.get_description(),
                 entry.get_hostname()
             ))
-            if cursor_obj.rowcount > 0:
-                new_entries_added += 1
-                # Check if this log needs an alert (severity 5-6)
-                if entry.get_severity() <= self.__alert_trap:
-                    self._trigger_alert(entry)
+
+            new_entries_added += 1
+            existing_timestamps.add(timestamp)
+
+            # Check if this log needs an alert (severity 5-6)
+            if entry.get_severity() <= self.__alert_trap:
+                self._trigger_alert(entry)
 
         connection_obj.commit()
         connection_obj.close()

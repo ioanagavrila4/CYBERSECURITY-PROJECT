@@ -15,21 +15,10 @@ class AlertSender:
         self.recipient_email = "ioanavalerya@gmail.com"
         self.sender_email = "onboarding@resend.dev"
         self.db_path = db_path
-        self.last_checked_id = self._get_last_log_id()
         self.monitoring = False
         self.monitor_thread = None
 
-    def _get_last_log_id(self) -> int:
-        """Get the ID of the last log entry to track new entries"""
-        try:
-            connection_obj = sqlite3.connect(self.db_path)
-            cursor_obj = connection_obj.cursor()
-            cursor_obj.execute("SELECT MAX(id) FROM logs")
-            result = cursor_obj.fetchone()
-            connection_obj.close()
-            return result[0] if result[0] is not None else 0
-        except sqlite3.Error:
-            return 0
+
 
     def send_security_alert(self, log_entry, sender_email: str = None, sender_password: str = None) -> bool:
         """
@@ -107,21 +96,23 @@ This is an automated alert from your cybersecurity monitoring system for priorit
             connection_obj = sqlite3.connect(self.db_path)
             cursor_obj = connection_obj.cursor()
 
-            query = "SELECT id, raw_format, time_stamp, severity, description, hostname FROM logs WHERE id > ? AND severity IN ('5', '6') ORDER BY id"
-            cursor_obj.execute(query, (self.last_checked_id,))
+            query = "SELECT id,raw_format, time_stamp, severity, description, hostname, updated FROM logs WHERE updated = 0 AND severity IN ('5', '6')"
+            cursor_obj.execute(query)
 
             new_logs = cursor_obj.fetchall()
 
             for log_row in new_logs:
-                log_id, raw_format, timestamp, severity, description, hostname = log_row
+                log_id, raw_format, timestamp, severity, description, hostname, updated = log_row
 
                 log_entry = LogEntry(raw_format)
 
                 if self.is_alert_priority(severity):
-                    self.send_security_alert(log_entry)
+                    if self.send_security_alert(log_entry):
+                        update_query = "UPDATE logs SET updated = 1 WHERE id = ?"
+                        cursor_obj.execute(update_query, (log_id,))
 
-                self.last_checked_id = log_id
 
+            connection_obj.commit()
             connection_obj.close()
 
         except sqlite3.Error as e:
@@ -177,22 +168,3 @@ This is an automated alert from your cybersecurity monitoring system for priorit
             return 0 <= priority_int <= 3
         except (ValueError, TypeError):
             return False
-
-
-def main():
-    """Example usage of the AlertSender"""
-    alert_sender = AlertSender()
-
-    print("Starting monitoring for new logs with severity 5-6...")
-    alert_sender.start_monitoring(interval=10)
-
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print("\nStopping monitoring...")
-        alert_sender.stop_monitoring()
-
-
-if __name__ == "__main__":
-    main()
