@@ -7,22 +7,32 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from domain.LogEntry import LogEntry
 
 class Collector:
-    def __init__(self, log_sources="../data/log_sources.txt", db_path="Sqlite3.db"):
+    def __init__(self, log_sources="../data/log_sources.txt", db_path="../data/Sqlite3.db"):
         self.__log_sources = log_sources
+        """
         data_dir = os.path.join(os.path.dirname(__file__), "..", "data")
         os.makedirs(data_dir, exist_ok=True)
         self.__db_path = os.path.join(data_dir, db_path)
-        with open(log_sources, 'r') as file:
-            for line in file:
-                line = line.strip()
-                if not line:
-                    break
-                self.add_file(line)
+        """
+        self.__db_path = db_path
+
+        self.update_db()
 
     def add_file(self, file_path: str):
         # TODO - detect log format
+        with open(self.__log_sources, 'a') as file:
+            file.write(file_path + "\n")
         logs =  self.__read_and_parse_jsonlog(file_path)
         self.__insert_logs_to_db(logs)
+
+    def update_db(self):
+        with open(self.__log_sources, 'r') as file:
+            for log_path in file:
+                log_path = log_path.strip()
+                if not log_path:
+                    break
+                logs = self.__read_and_parse_jsonlog(log_path)
+                self.__insert_logs_to_db(logs)
 
     def __read_and_parse_jsonlog(self,file_path:str ):
         """
@@ -32,7 +42,7 @@ class Collector:
             file_path (str): Path to the syslog file
 
         Returns:
-            None
+            list of processed LogEntry objects
         """
         logs = []
         try:
@@ -78,6 +88,7 @@ class Collector:
         return logs
 
     def __insert_logs_to_db(self, logs):
+        # TODO ensure no duplicates are added
         connection_obj = sqlite3.connect(self.__db_path)
         cursor_obj = connection_obj.cursor()
 
@@ -128,10 +139,7 @@ class Collector:
 
 
 def main():
-    syslog_file = "../dummy-files/rpi_dummy_syslog.txt"
-
     collector = Collector()
-    collector.add_file(syslog_file)
     collector.display_entries()
 
     """
