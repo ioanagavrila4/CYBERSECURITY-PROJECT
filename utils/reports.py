@@ -2,6 +2,7 @@ import json
 import sqlite3
 import datetime
 
+from domain.LogEntry import LogEntry, JSON
 from utils.collector import Collector
 
 
@@ -9,69 +10,67 @@ class Reports:
     def __init__(self, collector):
         self.collector = collector
 
-    def get_raw_logs(self):
-        raw_logs = []
+    def get_log_entries(self):
+        """
+        function for log entries in detail
+        :return:
+        """
+        log_entries = []
         try:
             connection_obj = sqlite3.connect(self.collector._Collector__db_path)
             cursor_obj = connection_obj.cursor()
             cursor_obj.execute('SELECT raw_format FROM logs ORDER BY time_stamp')
             rows = cursor_obj.fetchall()
-            raw_logs = [row[0] for row in rows]
+            for row in rows:
+                raw_log = row[0]
+                # Create and store LogEntry object for each raw log string
+                log_entry = LogEntry(raw_log, log_type=JSON)
+                log_entries.append(log_entry)
             connection_obj.close()
         except sqlite3.Error as e:
-            print(f"Database error while fetching: {e}")
-        return raw_logs
-
-    def get_realtime(self, timestamp_micro):
-
-        try:
-            dt = datetime.fromtimestamp(int(timestamp_micro) / 1_000_000)
-            return dt.strftime('%Y-%m-%d %H:%M:%S')
-        except Exception:
-            return "Invalid timestamp"
+            print(f"Database error while fetching logs: {e}")
+        return log_entries
 
     def get_pretty_logs(self):
+        """
+        function for pretty logs in detail
+        :return:
+        """
         pretty_logs = []
-        raw_logs = self.get_raw_logs()
+        log_entries = self.get_log_entries()
 
-        for log in raw_logs:
-            try:
-                log_json = json.loads(log)
+        for log_entry in log_entries:
+            pretty_log = (
+                f"Log with Message: {log_entry.get_description() or 'N/A'}\n"
+                f"Severity/Priority: {log_entry.get_severity() or 'N/A'}\n"
+                f"Hostname: {log_entry.get_hostname() or 'N/A'}\n"
+                f"Realtime timestamp: {log_entry.get_realtime()}"
+            )
+            pretty_logs.append(pretty_log)
 
-                message = log_json.get("MESSAGE", "N/A")
-                priority = log_json.get("PRIORITY", "N/A")
-                severity = priority
-                facility = log_json.get("SYSLOG_FACILITY", "N/A")
-                identifier = log_json.get("SYSLOG_IDENTIFIER", "N/A")
-                hostname = log_json.get("_HOSTNAME", "N/A")
-                id_machine = log_json.get("_MACHINE_ID", "N/A")
-
-                runtime_scope = log_json.get("_RUNTIME_SCOPE", "N/A")
-                realtime_raw = log_json.get("__REALTIME_TIMESTAMP", None)
-
-                realtime = self.get_realtime(realtime_raw) if realtime_raw else "N/A"
-
-                pretty_log = (
-                    f"Log with Message: {message}\n"
-                    f"Severity/Priority: {severity}\n"
-                    f"Syslog Facility and Identifier: {facility} {identifier}\n"
-                    f"Hostname: {hostname}\n"
-                    f"ID Machine: {id_machine}\n"
-                    f"Runtime Scope: {runtime_scope}\n"
-                    f"Realtime timestamp: {realtime}"
-                )
-
-                pretty_logs.append(pretty_log)
-            except json.JSONDecodeError as e:
-                continue
         return pretty_logs
 
     def print_pretty_logs(self):
-        pretty_logs = self.get_pretty_logs()
+        for log in self.get_pretty_logs():
+            print(log)
+            print("-" * 40)
 
-        for i, log in enumerate(pretty_logs, 1):
-            print(f"{log}")
-            print( "-" * 40)
+    def filter_by_type_report(self, type_report, filter_by_this):
+        """
+        function for filtering log entries by type
+        :param type_report:
+        :return:
+        """
+        all_logs = self.get_message_logs()
+        filtered_logs = []
+        for log_entry in all_logs:
+            if type_report == "Severity" :
+                if log_entry.get_severity() == filter_by_this:
+                    filtered_logs.append(log_entry)
+            elif type_report == "Time" :
+                if log_entry.get_time() < filter_by_this:
+                    filtered_logs.append(log_entry)
+        return filtered_logs
 
 def main():
     LOG_SOURCES = "../data/log_sources.txt"
