@@ -36,13 +36,16 @@ class LogEntry:
             self._severity = log.get("PRIORITY")
             self._description = log.get("MESSAGE")
             self._hostname = log.get("_HOSTNAME")
-        except:
-            print("Failed to parse log entry")
+        except json.JSONDecodeError as e:
+            print(f"Failed to parse log entry as JSON: {e}")
+            print(f"Raw format: {self._raw_format[:100]}...")
+        except Exception as e:
+            print(f"Unexpected error parsing log entry: {e}")
 
 
 
 def main():
-    test_str = json_str = """
+    test_str = """
     {
         "_SYSTEMD_SLICE": "-.slice",
         "MESSAGE": "run-credentials-systemd\\x2dtmpfiles\\x2dclean.service.mount: Deactivated suc",
