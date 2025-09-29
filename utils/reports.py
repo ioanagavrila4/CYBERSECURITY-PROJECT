@@ -2,7 +2,7 @@ import json
 import sqlite3
 import datetime
 
-from domain.LogEntry import LogEntry, JSON
+from domain.LogEntry import LogEntry
 from utils.collector import Collector
 
 
@@ -24,7 +24,7 @@ class Reports:
             for row in rows:
                 raw_log = row[0]
                 # Create and store LogEntry object for each raw log string
-                log_entry = LogEntry(raw_log, log_type=JSON)
+                log_entry = LogEntry(raw_log, log_type=1)
                 log_entries.append(log_entry)
             connection_obj.close()
         except sqlite3.Error as e:

@@ -1,11 +1,11 @@
 import json
 from datetime import datetime
 
-UNKNOWN = 0
-JSON = 1
+LOG_TYPE_UNKNOWN = 0
+LOGTYPE_JSON = 1
 
 class LogEntry:
-    def __init__(self, raw_format: str, log_type=JSON):
+    def __init__(self, raw_format: str, log_type=LOGTYPE_JSON):
         self._raw_format = raw_format
         self._timestamp = None
         self._severity = None
@@ -14,7 +14,7 @@ class LogEntry:
         self._syslog_identifier = None
         self._type = log_type
 
-        if self._type==JSON:
+        if self._type==LOGTYPE_JSON:
             self.parse_json_log()
 
     def get_raw_format(self):
