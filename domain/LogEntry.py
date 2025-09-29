@@ -21,7 +21,7 @@ class LogEntry:
     def get_timestamp(self):
         return self._timestamp
     def get_severity(self):
-        return self._severity
+        return int(self._severity)
     def get_description(self):
         return self._description
     def get_hostname(self):

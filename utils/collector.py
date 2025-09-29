@@ -3,6 +3,8 @@ import os
 import sys
 import sqlite3
 
+# TODO - check if updated column is 1; set updated column to 1 after alert is sent
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from domain.LogEntry import LogEntry
 
@@ -10,6 +12,7 @@ class Collector:
     def __init__(self, log_sources="../data/log_sources.txt", db_path="../data/Sqlite3.db"):
         self.__log_sources = log_sources
         self.__db_path = db_path
+        self.__alert_trap = 3
         self.__create_table_if_not_exists()
 
         self.update_db()
@@ -123,7 +126,7 @@ class Collector:
             if cursor_obj.rowcount > 0:
                 new_entries_added += 1
                 # Check if this log needs an alert (severity 5-6)
-                if entry.get_severity() in ['5', '6']:
+                if entry.get_severity() <= self.__alert_trap:
                     self._trigger_alert(entry)
 
         connection_obj.commit()
