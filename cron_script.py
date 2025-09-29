@@ -9,7 +9,7 @@ JOURNAL_LOG_FILE = "data/journalctl.json"
 def main():
     with open(JOURNAL_LOG_FILE, 'w') as f:
         subprocess.run(
-            ["journalctl", "-o", "json-pretty", "-r", "-n", "100"],
+            ["journalctl", "-o", "json", "-r", "-n", "100"],
             stdout=f,
             check=True
         )
