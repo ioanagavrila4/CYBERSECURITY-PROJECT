@@ -12,7 +12,6 @@ class Collector:
     def __init__(self, log_sources="../data/log_sources.txt", db_path="../data/Sqlite3.db"):
         self.__log_sources = log_sources
         self.__db_path = db_path
-        self.__alert_trap = 3
         self.__create_table_if_not_exists()
 
         self.update_db()
@@ -34,7 +33,6 @@ class Collector:
         cursor_obj.execute(create_table_query)
         connection_obj.commit()
         connection_obj.close()
-
 
     def add_file(self, file_path: str):
         # TODO - detect log format
@@ -136,9 +134,8 @@ class Collector:
             new_entries_added += 1
             existing_timestamps.add(timestamp)
 
-            # Check if this log needs an alert (severity 5-6)
-            if entry.get_severity() <= self.__alert_trap:
-                self._trigger_alert(entry)
+            # Alert checking will be handled by AlertSender monitoring
+            # Remove immediate alert triggering to avoid duplicates
 
         connection_obj.commit()
         connection_obj.close()
@@ -155,7 +152,7 @@ class Collector:
         except Exception as e:
             print(f"Failed to send alert for log entry: {e}")
 
-    def display_entries(self) -> None:
+    def display_entries_on_console(self) -> None:
         try:
             connection_obj = sqlite3.connect(self.__db_path)
             cursor_obj = connection_obj.cursor()
@@ -170,7 +167,7 @@ class Collector:
 
             for i, row in enumerate(rows, 1):
                 print(f"Entry {i}:")
-                print(f"  Raw Format: {row[0]}")
+                #print(f"  Raw Format: {row[0]}")
                 print(f"  Timestamp: {row[1]}")
                 print(f"  Severity: {row[2]}")
                 print(f"  Description: {row[3]}")
@@ -181,3 +178,9 @@ class Collector:
 
         except sqlite3.Error as e:
             print(f"Database error: {e}")
+
+    def get_entry_count(self):
+        connection_obj = sqlite3.connect(self.__db_path)
+        count = connection_obj.execute("SELECT COUNT(*) FROM logs").fetchone()[0]
+        connection_obj.close()
+        return count
