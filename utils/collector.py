@@ -110,7 +110,7 @@ class Collector:
             VALUES (?, ?, ?, ?, ?)
         """
 
-
+        new_entries_added = 0
         for entry in logs:
             cursor_obj.execute(insert_query, (
                 entry.get_raw_format(),
@@ -119,9 +119,26 @@ class Collector:
                 entry.get_description(),
                 entry.get_hostname()
             ))
+            if cursor_obj.rowcount > 0:
+                new_entries_added += 1
+                # Check if this log needs an alert (severity 5-6)
+                if entry.get_severity() in ['5', '6']:
+                    self._trigger_alert(entry)
 
         connection_obj.commit()
         connection_obj.close()
+
+        if new_entries_added > 0:
+            print(f"Added {new_entries_added} new log entries to database")
+
+    def _trigger_alert(self, log_entry):
+        """Trigger email alert for severity 5-6 logs"""
+        try:
+            from .alerts import AlertSender
+            alert_sender = AlertSender(db_path=self.__db_path)
+            alert_sender.send_security_alert(log_entry)
+        except Exception as e:
+            print(f"Failed to send alert for log entry: {e}")
 
     def display_entries(self) -> None:
         try:
