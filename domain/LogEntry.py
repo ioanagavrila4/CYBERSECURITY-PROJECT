@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 UNKNOWN = 0
 JSON = 1
@@ -27,6 +28,9 @@ class LogEntry:
         return self._hostname
     def get_type(self):
         return self._type
+    def get_realtime(self):
+        dt = datetime.fromtimestamp(int(self._timestamp) / 1000000)
+        return dt.strftime('%Y-%m-%d %H:%M:%S')
 
     def parse_json_log(self):
         try:

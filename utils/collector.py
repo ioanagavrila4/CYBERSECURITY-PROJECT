@@ -3,6 +3,7 @@ import os
 import sys
 import sqlite3
 
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from domain.LogEntry import LogEntry
 
@@ -89,6 +90,7 @@ class Collector:
         for i, entry in enumerate(self._log_entries[:5]):
             print(f"\nEntry {i + 1}:")
             print(entry.get_raw_format())
+            print(entry.get_realtime())
 
 
 def main():
@@ -101,9 +103,12 @@ def main():
     collector.add_file(syslog_file)
     collector.display_entries()
 
+    """
     print("\nInserting parsed logs into database...")
     collector.insert_logs_to_db(db_path)
     print("Insertion complete.")
+    """
+
 
 if __name__ == "__main__":
     main()
