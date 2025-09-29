@@ -7,11 +7,11 @@ LOGTYPE_JSON = 1
 class LogEntry:
     def __init__(self, raw_format: str, log_type=LOGTYPE_JSON):
         self._raw_format = raw_format
-        self._timestamp = None
-        self._severity = None
-        self._description = None
+        self._timestamp = ""
+        self._severity = ""
+        self._description = ""
         #self._hostname = None
-        self._syslog_identifier = None
+        self._syslog_identifier = ""
         self._type = log_type
 
         if self._type==LOGTYPE_JSON:
@@ -38,20 +38,37 @@ class LogEntry:
     def parse_json_log(self):
         try:
             log = json.loads(self._raw_format)
-            self._timestamp = log.get("__REALTIME_TIMESTAMP")
-            self._severity = log.get("PRIORITY")
-            self._description = log.get("MESSAGE")
-            #self._hostname = log.get("_HOSTNAME")
-            self._syslog_identifier = log.get("SYSLOG_IDENTIFIER")
-        except:
-            print("Failed to parse log entry")
 
+            # Get timestamp
+            self._timestamp = log.get("__REALTIME_TIMESTAMP", "")
 
+            # Get severity
+            self._severity = log.get("PRIORITY", "6")
 
+            # Get description - handle if it's a list or other type
+            message = log.get("MESSAGE", "")
+            if isinstance(message, list):
+                # If MESSAGE is a list, join it into a string
+                self._description = " ".join(str(m) for m in message)
+            elif isinstance(message, dict):
+                # If MESSAGE is a dict, convert to JSON string
+                self._description = json.dumps(message)
+            else:
+                # Otherwise treat as string
+                self._description = str(message) if message else ""
+
+            # Get syslog identifier
+            self._syslog_identifier = log.get("SYSLOG_IDENTIFIER", "unknown")
+
+        except json.JSONDecodeError as e:
+            print(f"Failed to parse log entry: {e}")
+            self._syslog_identifier = "unknown"
+        except Exception as e:
+            print(f"Error parsing log entry: {e}")
+            self._syslog_identifier = "unknown"
 
 def main():
     pass
-
 
 if __name__ == "__main__":
     main()

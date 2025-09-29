@@ -51,12 +51,13 @@ class Collector:
                 logs = self.__read_and_parse_jsonlog(log_path)
                 self.__insert_logs_to_db(logs)
 
-    def __read_and_parse_jsonlog(self,file_path:str ):
+    def __read_and_parse_jsonlog(self, file_path: str):
         """
-        Read the syslog file and parse each JSON log entry using LogEntry class
+        Read the JSON log file and parse each JSON log entry using LogEntry class.
+        Supports NDJSON format (one JSON object per line).
 
         Args:
-            file_path (str): Path to the syslog file
+            file_path (str): Path to the JSON log file
 
         Returns:
             list of processed LogEntry objects
@@ -64,37 +65,24 @@ class Collector:
         logs = []
         try:
             with open(file_path, 'r') as file:
-                content = file.read().strip()
-
-                # Parse JSON objects that are separated by }\n{
-                # Split by closing brace followed by opening brace
-                json_blocks = content.split('}\n{')
-
-                # Fix the split JSON blocks by adding back the braces
-                for i, block in enumerate(json_blocks):
-                    if not block:
+                for line_number, line in enumerate(file, 1):
+                    # Skip empty lines
+                    line = line.strip()
+                    if not line:
                         continue
-
-                    # Add back the opening brace if it's not the first block
-                    if i > 0 and not block.startswith('{'):
-                        block = '{' + block
-
-                    # Add back the closing brace if it's not the last block
-                    if i < len(json_blocks) - 1 and not block.endswith('}'):
-                        block = block + '}'
 
                     try:
                         # Validate JSON format first
-                        json.loads(block)
+                        json.loads(line)
                         # Create LogEntry object
-                        log_entry = LogEntry(block)
+                        log_entry = LogEntry(line)
                         logs.append(log_entry)
                     except json.JSONDecodeError as e:
-                        print(f"Failed to parse JSON block {i}: {e}")
-                        print(f"Block content: {block[:100]}...")
+                        print(f"Failed to parse JSON on line {line_number}: {e}")
+                        print(f"Line content: {line[:100]}...")
                         continue
                     except Exception as e:
-                        print(f"Failed to create LogEntry from block {i}: {e}")
+                        print(f"Failed to create LogEntry from line {line_number}: {e}")
                         continue
 
         except FileNotFoundError:

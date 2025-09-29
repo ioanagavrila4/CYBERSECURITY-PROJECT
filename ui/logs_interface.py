@@ -14,7 +14,7 @@ from utils.collector import Collector
 class LogsInterface:
     """Main interface for viewing and filtering security logs"""
 
-    def __init__(self, db_path="data/Sqlite3.db", log_sources="data/log_sources.txt"):
+    def __init__(self, db_path="../data/Sqlite3.db", log_sources="../data/log_sources.txt"):
         self.db_path = db_path
         self.log_sources = log_sources
         self.root = None

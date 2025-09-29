@@ -8,6 +8,7 @@ DB_PATH = "data/Sqlite3.db"
 def main():
     collector = Collector(LOG_SOURCES, DB_PATH)
     print(collector.get_entry_count())
+    collector.display_entries_on_console()
 
     # Start email monitoring for new logs
     alert_sender = AlertSender(db_path=DB_PATH)
