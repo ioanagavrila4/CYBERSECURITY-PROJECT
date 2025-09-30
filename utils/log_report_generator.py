@@ -334,4 +334,3 @@ This is an automated report from your cybersecurity monitoring system.
         except Exception as e:
             print(f"Failed to send report email: {e}")
             return False
-

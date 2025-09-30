@@ -153,6 +153,10 @@ class LogsInterface:
         self.root.geometry("1400x800")
         self.root.configure(bg='#f0f0f0')
 
+        self.filter_severity = tk.StringVar(self.root)
+        self.filter_syslog = tk.StringVar(self.root)
+        self.filter_datetime = tk.StringVar(self.root)
+
         self._create_header()
         self._create_control_panel()
         self._create_logs_table()
@@ -317,7 +321,7 @@ class LogsInterface:
             fg='#7f8c8d'
         ).pack(anchor='w')
 
-        self.filter_severity = tk.StringVar()
+        # self.filter_severity = tk.StringVar()
         severity_values = ["", "0 - Emergency", "1 - Alert", "2 - Critical",
                           "3 - Error", "4 - Warning", "5 - Notice",
                           "6 - Info", "7 - Debug"]
@@ -353,7 +357,7 @@ class LogsInterface:
             fg='#7f8c8d'
         ).pack(anchor='w')
 
-        self.filter_syslog = tk.StringVar()
+        # self.filter_syslog = tk.StringVar()
         self.syslog_combo = ttk.Combobox(
             syslog_col,
             textvariable=self.filter_syslog,
@@ -386,7 +390,7 @@ class LogsInterface:
         ).pack(anchor='w', pady=(0, 5))
 
         # Create dropdown with last 10 days
-        self.filter_datetime = tk.StringVar()
+        # self.filter_datetime = tk.StringVar()
         
         # Generate last 10 days with timestamp format
         datetime_values = self._generate_last_10_days()

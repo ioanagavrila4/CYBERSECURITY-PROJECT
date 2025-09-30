@@ -15,7 +15,7 @@ try:
 except ImportError:
     # Fallback if email_interface is not available
     def get_email_config():
-        return {'alert_email': '', 'alert_priority': 6}
+        return {'alert_email': '', 'alert_priority': 0}
 
 class AlertSender:
     def __init__(self, api_key: str = "re_S5RXcYYE_Kkaz3zskzALB5Jh2Dbwjghc4", db_path: str = "data/Sqlite3.db"):
@@ -32,7 +32,7 @@ class AlertSender:
         """Load email configuration from the interface"""
         config = get_email_config()
         self.recipient_email = config.get('alert_email', 'ioanavalerya@gmail.com')  # fallback to original
-        self.alert_priority_threshold = config.get('alert_priority', 4)  # configurable threshold
+        self.alert_priority_threshold = config.get('alert_priority', 0)  # configurable threshold
 
     def send_security_alert(self, log_entry, sender_email: str = None, sender_password: str = None) -> bool:
         """
