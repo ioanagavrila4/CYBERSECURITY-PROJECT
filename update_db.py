@@ -21,6 +21,13 @@ def main():
     collector.update_db()
     print(collector.get_entry_count())
 
+    try:
+        with open(JOURNAL_LOG_FILE, 'w') as f:
+            f.write('')
+        print(f"Cleared journal file: {JOURNAL_LOG_FILE}")
+    except Exception as e:
+        print(f"Warning: Could not clear journal file: {e}")
+
     # Start email monitoring for new logs
     alert_sender = AlertSender(db_path=DB_PATH)
     print("\nStarting email monitoring for logs based on configured priority threshold...")
