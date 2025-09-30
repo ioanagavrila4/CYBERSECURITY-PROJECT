@@ -7,13 +7,12 @@ LOG_SOURCES = "data/log_sources.txt"
 DB_PATH = "data/Sqlite3.db"
 
 def main():
-    #TODO execute cron_script on boot
+    #TODO execute update_db script on boot
     collector = Collector(LOG_SOURCES, DB_PATH)
     #print(f'DEBUG: Added {collector.get_entry_count()} entries from db')
     #collector.display_entries_on_console()
 
     create_email_interface()
-
 
 if __name__ == '__main__':
     main()

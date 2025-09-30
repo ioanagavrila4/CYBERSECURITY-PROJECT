@@ -30,7 +30,7 @@ def main():
 
     # Start email monitoring for new logs
     alert_sender = AlertSender(db_path=DB_PATH)
-    print("\nStarting email monitoring for logs based on configured priority threshold...")
+    print("\nChecking for logs to alert...")
     alert_sender.check_new_logs()
 
 if __name__ == '__main__':
